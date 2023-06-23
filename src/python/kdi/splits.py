@@ -45,8 +45,7 @@ def iterSplits(nPartitions, splitPoints, alphabet):
             minT,maxT,minStr,maxStr = splitRanges.next()
 
         pt = (t - minT) / (maxT - minT)
-        s = interpolate_string(pt, minStr, maxStr, 8, alphabet)
-        yield s
+        yield interpolate_string(pt, minStr, maxStr, 8, alphabet)
 
 def iterRowPredicates(nParts, splitPoints, alphabet):
     if nParts < 2:

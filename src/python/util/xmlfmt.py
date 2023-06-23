@@ -25,8 +25,7 @@ import re
 def iterPreorder(node):
     yield node
     for x in node.childNodes:
-        for y in iterPreorder(x):
-            yield y
+        yield from iterPreorder(x)
 
 def getText(node):
     return ''.join([str(x.data) for x in iterPreorder(node) if x.nodeType == x.TEXT_NODE])
@@ -193,7 +192,7 @@ def qqescape(x):
 def cdata(x):
     if ']]>' in x:
         raise ValueError('CDATA cannot contain "]]>"')
-    return '<![CDATA[%s]]>' % x
+    return f'<![CDATA[{x}]]>'
 
 _rId = re.compile(r'[a-zA-Z_][a-zA-Z0-9_]*')
 def identifier(x):
@@ -206,9 +205,12 @@ def xml(x):
     if hasattr(x, '__xml__'):
         return x.__xml__()
     elif isinstance(x, dict):
-        return ''.join([
-            '<%s>%s</%s>' % (identifier(k), xml(v), identifier(k))
-            for k,v in x.iteritems()])
+        return ''.join(
+            [
+                f'<{identifier(k)}>{xml(v)}</{identifier(k)}>'
+                for k, v in x.iteritems()
+            ]
+        )
     elif isinstance(x, (list,tuple)):
         return ''.join([
             '<i%d>%s</i%d>' % (i,xml(v),i) for i,v in enumerate(x)])

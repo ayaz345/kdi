@@ -33,6 +33,9 @@ class ArrayBase(object):
 #----------------------------------------------------------------------------
 def Array(etype, ever=None, ltype=MsbInt, lver=None):
 
+
+
+
     class Array(ArrayBase):
         def __init__(self, buf, base=0, ver=None):
             self._buf = buf
@@ -49,7 +52,7 @@ def Array(etype, ever=None, ltype=MsbInt, lver=None):
             if callable(esize):
                 off = 0
                 offsets = []
-                for i in range(self._arrlen):
+                for _ in range(self._arrlen):
                     offsets.append(off)
                     off += esize(etype(self._buf, self._arrbase + off, ever))
                 self._size += off
@@ -58,8 +61,9 @@ def Array(etype, ever=None, ltype=MsbInt, lver=None):
                 self._size = self._size + esize * self._arrlen
                 self._offsetof = lambda idx: idx * esize
 
-        def _sizeof(cls, ver=None):
+        def _sizeof(self, ver=None):
             return lambda obj: obj._size
+
         _sizeof = classmethod(_sizeof)
 
         def __getitem__(self, idx):
@@ -79,13 +83,14 @@ def Array(etype, ever=None, ltype=MsbInt, lver=None):
                 yield etype(self._buf, self._arrbase + off, ever)
 
         def __repr__(self):
-            return '[%s]' % ', '.join([repr(x) for x in self])
+            return f"[{', '.join([repr(x) for x in self])}]"
 
         def __str__(self):
-            return '[%s]' % ', '.join([str(x) for x in self])
+            return f"[{', '.join([str(x) for x in self])}]"
 
         def __xml__(self):
             return ''.join(map(xml, self))
+
 
     return Array
 
@@ -125,6 +130,6 @@ class DataArray(object):
 
     def __iter__(self):
         off = self.base
-        for i in range(len(self)):
+        for _ in range(len(self)):
             yield self.dtype(self.s, off, self.dver)
             off += self.dsize

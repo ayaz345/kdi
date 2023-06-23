@@ -33,8 +33,7 @@ def sampleLines(fn, num):
         sz = f.tell()
         while num > 0:
             pos = randrange(0, sz)
-            line = getLine(f, pos)
-            if line:
+            if line := getLine(f, pos):
                 yield line
                 num -= 1
     except:

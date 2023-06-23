@@ -104,8 +104,10 @@ def test():
     alph = ''.join([chr(x) for x in range(256)])
     def rstr():
         return ''.join([choice(alph) for x in xrange(randrange(3,12))])
+
     def rtup():
-        return tuple([rstr() for x in xrange(randrange(1,4))])
+        return tuple(rstr() for x in xrange(randrange(1,4)))
+
     tups = [rtup() for x in xrange(5000)]
     encs = [zeroEncode(*x) for x in tups]
 

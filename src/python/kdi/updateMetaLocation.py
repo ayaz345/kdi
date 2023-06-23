@@ -32,9 +32,9 @@ def updateLocations(meta, port):
     for row,col,time,val in metaTable.scan('column = "config"'):
         table,dummy,last = zeroDecode(row)
         cfg = Properties(StringIO(val))
-        loc = 'kdi://%s:%s/%s' % (cfg.get('server'), port, table)
+        loc = f"kdi://{cfg.get('server')}:{port}/{table}"
         metaTable.set(row, 'location', time, loc)
-    
+
     # Sync changes
     metaTable.sync()
     

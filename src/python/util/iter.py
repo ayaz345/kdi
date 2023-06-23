@@ -21,7 +21,7 @@
 
 def first_n(it, n):
     it = iter(it)
-    for i in range(n):
+    for _ in range(n):
         yield it.next()
 
 def merge(inputs, key=lambda x:x):
@@ -73,10 +73,7 @@ class pushback_iter(object):
         return self
 
     def next(self):
-        if self._stack:
-            return self._stack.pop()
-        else:
-            return self._it.next()
+        return self._stack.pop() if self._stack else self._it.next()
 
     def push(self, v):
         self._stack.append(v)
@@ -100,11 +97,10 @@ class peek_iter(object):
         return self
 
     def next(self):
-        if self._peeked:
-            x, self._peekValue, self._peeked = self._peekValue, None, False
-            return x
-        else:
+        if not self._peeked:
             return self._it.next()
+        x, self._peekValue, self._peeked = self._peekValue, None, False
+        return x
 
     def peek(self):
         if not self._peeked:
@@ -234,11 +230,7 @@ def join(inputs, keyfuncs=None):
     heapq.heapify(q)
     while q:
         k,i,it = q[0]
-        it_tuple = tuple([iter_equal_key(it2, k, keyfuncs[j]) for j,it2 in enumerate(iters)])
-        yield it_tuple
-        for x in it_tuple:
-            for y in x:
-                pass
+        yield tuple(iter_equal_key(it2, k, keyfuncs[j]) for j,it2 in enumerate(iters))
         while q and q[0][0] == k:
             k,i,it = q[0]
             for v in it:

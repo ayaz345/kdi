@@ -33,7 +33,7 @@ def parseConfig(s):
         if key in ('server', 'minRow'):
             continue
         if not key.startswith('tables.'):
-            raise RuntimeError('unknown key: %s' % key)
+            raise RuntimeError(f'unknown key: {key}')
         frags.append((key, cfg.get(key)))
     frags.sort()
     frags = [ val for key,val in frags ]

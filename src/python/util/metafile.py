@@ -49,8 +49,8 @@ class MetaBase(object):
         f.write(repr(self))
         f.write('\n')
         f.close()
-    def load(metaFn):
-        f = file(metaFn)
+    def load(self):
+        f = file(self)
         s = f.read()
         f.close()
         return eval(s)
@@ -58,7 +58,7 @@ class MetaBase(object):
 
 def _checkBase(x, base=MetaBase):
     if not isinstance(x, base):
-        raise ValueError('Must derive from %s' % base.__name__)
+        raise ValueError(f'Must derive from {base.__name__}')
 
 #----------------------------------------------------------------------------
 # MetaNull
@@ -112,7 +112,7 @@ class MetaGroup(MetaBase):
         # Default interpretation is as a single serial logical file
         return SerialMultiFile(self, mode, gen)
     def __repr__(self):
-        return 'MetaGroup(%s)'%(', '.join([repr(x) for x in self.children]))
+        return f"MetaGroup({', '.join([repr(x) for x in self.children])})"
 
 
 #----------------------------------------------------------------------------
@@ -189,11 +189,10 @@ class SerialMultiFile(object):
                 self.meta.addChild(mf)
             break
         else:
-            if self.idx+1 < self.meta.numChildren():
-                self.idx += 1
-                mf = self.meta.getChild(self.idx)
-            else:
+            if self.idx + 1 >= self.meta.numChildren():
                 return False
+            self.idx += 1
+            mf = self.meta.getChild(self.idx)
         try:
             self.fp = mf.open(self.mode)
             return True
@@ -209,10 +208,7 @@ class SerialMultiFile(object):
         # Initial state:  (-1, None, False)
         # End of file index i: (i, eof_i, False)
         # In file j, at pos p: (j, p, True)
-        if self.fp:
-            fpos = self.fp.tell()
-        else:
-            fpos = self.eofPos
+        fpos = self.fp.tell() if self.fp else self.eofPos
         return (self.idx, fpos, self.fp != None)
 
     def seek(self, pos):
@@ -262,12 +258,11 @@ class SerialMultiFile(object):
             if not self.fp:
                 if not self.openNext():
                     break
-            x = self.fp.read(n)
-            if not x:
-                self.closeCurrent()
-            else:
+            if x := self.fp.read(n):
                 r += x
                 n -= len(x)
+            else:
+                self.closeCurrent()
         return r
 
     def flush(self):
@@ -286,7 +281,7 @@ class SerialMultiFile(object):
     def truncate(self):
         if self.closed:
             raise ValueError('I/O operation on closed file')
-        if not self.mode in self.__WRITE_MODES:
+        if self.mode not in self.__WRITE_MODES:
             raise IOError('Invalid argument')
         self.meta.eraseChildren(self.idx + 1)
         if self.fp:
@@ -309,7 +304,7 @@ class ParallelMultiFile(object):
     def __getitem__(self, idx):
         return self.fp[idx]
     def tell(self):
-        return tuple([f.tell() for f in self.fp])
+        return tuple(f.tell() for f in self.fp)
     def seek(self, pos):
         if len(pos) != len(self.fp):
             raise ValueError('Wrong state size')

@@ -36,10 +36,7 @@ class VersionError(StandardError):
 #----------------------------------------------------------------------------
 def _fadd(a,b):
     if callable(a):
-        if callable(b):
-            return lambda *x: a(*x) + b(*x)
-        else:
-            return lambda *x: a(*x) + b
+        return (lambda *x: a(*x) + b(*x)) if callable(b) else (lambda *x: a(*x) + b)
     elif callable(b):
         return lambda *x: a + b(*x)
     else:
@@ -100,11 +97,9 @@ class StructType(type):
 
         # Set default __format__ if necessary
         if '__format__' not in body:
-            if '__version__' in body:
-                self.__format__ = { self.__version__ : [] }
-            else:
-                self.__format__ = { 0 : [] }
-
+            self.__format__ = (
+                {self.__version__: []} if '__version__' in body else {0: []}
+            )
         # Set default __version__ if necessary
         if '__version__' not in body:
             self.__version__ = max(self.__format__.keys())
@@ -164,7 +159,7 @@ class StructType(type):
                 battrs, bsize = base.__vinfo__[bver]
 
                 # Update our attribute table
-                attrs.update(battrs)
+                attrs |= battrs
 
                 # Offset attributes in this class by the size of the
                 # base class.
@@ -176,9 +171,7 @@ class StructType(type):
                 # Field is (name, type, version); version is optional
                 fname = field[0]
                 ftype = field[1]
-                if len(field) >= 3: fver = field[2]
-                else: fver = None
-
+                fver = field[2] if len(field) >= 3 else None
                 #print '   attr: %s.%s %r' % (name, fname, (offset, ftype, fver))
 
                 # Make an attribute entry in the table:
@@ -208,10 +201,7 @@ class StructBase(object):
     def __init__(self, buffer, start=0, version=None):
         self._buf = buffer
         self._base = start
-        if version is not None:
-            self._version = version
-        else:
-            self._version = self.__version__
+        self._version = version if version is not None else self.__version__
         try:
             self._attrs, self._size = self.__vinfo__[self._version]
         except KeyError:
@@ -272,13 +262,13 @@ class StructBase(object):
     def __getattr__(self, attr):
         return self._getattr(attr)
 
-    def _basesizeof(cls, ver=None):
+    def _basesizeof(self, ver=None):
         if ver is None:
-            ver = cls.__version__
+            ver = self.__version__
         try:
-            return cls.__vinfo__[ver][1]
+            return self.__vinfo__[ver][1]
         except KeyError:
-            raise VersionError(cls, ver)
+            raise VersionError(self, ver)
     _sizeof = classmethod(_basesizeof)
     _basesizeof = staticmethod(_basesizeof)
 
@@ -310,12 +300,11 @@ class StructBase(object):
         #print 'Class: %s, %s' % (cls, cver)
 
         #print 'Base: %s, %s' % (cls.__bases__, cls.__base_versions__[cver])
-            
+
         for base, bver in zip(cls.__bases__, cls.__base_versions__[cver]):
             #print 'Recurse: %s, %s' % (base, bver)
             if hasattr(base, '_iterattrs'):
-                for attr in base._iterattrs(self, base, bver):
-                    yield attr
+                yield from base._iterattrs(self, base, bver)
         for field in cls.__format__[cver]:
             yield field[0]
 
@@ -323,5 +312,6 @@ class StructBase(object):
         return self._iterattrs()
 
     def __xml__(self):
-        return ''.join(['<%s>%s</%s>' % (a, xml(getattr(self,a)), a)
-                        for a in self._iterattrs()])
+        return ''.join(
+            [f'<{a}>{xml(getattr(self, a))}</{a}>' for a in self._iterattrs()]
+        )

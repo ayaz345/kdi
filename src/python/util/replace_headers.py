@@ -37,28 +37,27 @@ _extmap = {
 def getHeaderLines(projectName, author, copyrightYear, creationDate=''):
     capitalProjectName = projectName[:1].upper() + projectName[1:]
 
-    r = ['Copyright (C) %s %s' % (copyrightYear, author)]
+    r = [f'Copyright (C) {copyrightYear} {author}']
     if creationDate:
-        r.append('Created %s' % creationDate)
+        r.append(f'Created {creationDate}')
     r.append('')
-    r.append('This file is part of %s.' % projectName)
-    r.append('')
-    r.append('%s is free software; you can redistribute it and/or '
-             'modify it under the terms of the GNU General Public '
-             'License as published by the Free Software Foundation; '
-             'either version 2 of the License, or any later version.'
-             % capitalProjectName)
-    r.append('')
-    r.append('%s is distributed in the hope that it will be useful, '
-             'but WITHOUT ANY WARRANTY; without even the implied '
-             'warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR '
-             'PURPOSE.  See the GNU General Public License for more '
-             'details.' % capitalProjectName)
-    r.append('')
-    r.append('You should have received a copy of the GNU General '
-             'Public License along with this program; if not, write '
-             'to the Free Software Foundation, Inc., 51 Franklin '
-             'Street, Fifth Floor, Boston, MA 02110-1301, USA.')
+    r.extend((f'This file is part of {projectName}.', ''))
+    r.extend(
+        (
+            f'{capitalProjectName} is free software; you can redistribute it and/or modify it under the terms of the GNU General Public License as published by the Free Software Foundation; either version 2 of the License, or any later version.',
+            '',
+        )
+    )
+    r.extend(
+        (
+            f'{capitalProjectName} is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more details.',
+            '',
+            'You should have received a copy of the GNU General '
+            'Public License along with this program; if not, write '
+            'to the Free Software Foundation, Inc., 51 Franklin '
+            'Street, Fifth Floor, Boston, MA 02110-1301, USA.',
+        )
+    )
     return r
 
 def formatHeader(prefix, projectName, author, copyrightYear, creationDate=''):
@@ -102,13 +101,9 @@ def extractPyHeader(content):
     h = ''
     for line in f:
         l = line.strip()
-        if not l:
-            if h.strip(): break
-            h += line
-        elif l.startswith('#'):
-            h += line
+        if not l and h.strip() or l and not l.startswith('#'): break
         else:
-            break
+            h += line
     return h
 
 _headerExtractors = {
@@ -118,13 +113,11 @@ _headerExtractors = {
 
 _created = re.compile('Created ((\d+)[/-]\d+[/-]\d+)', re.I)
 def extractCreated(header):
-    m = _created.search(header)
-    if m:
+    if m := _created.search(header):
         return m.group(2),m.group(1).replace('/','-')
-    else:
-        import time
-        y = str(time.localtime().tm_year)
-        return y,''
+    import time
+    y = str(time.localtime().tm_year)
+    return y,''
 
 def getCppHeader(oldHeader, projectName, author):
     copyrightYear,creationDate = extractCreated(oldHeader)
@@ -135,8 +128,7 @@ def getCppHeader(oldHeader, projectName, author):
 
 def getPyHeader(oldHeader, projectName, author):
     copyrightYear,creationDate = extractCreated(oldHeader)
-    h  = '#!/usr/bin/env python\n'
-    h += '#\n'
+    h = '#!/usr/bin/env python\n' + '#\n'
     h += formatHeader('# ', projectName, author, copyrightYear, creationDate) + '\n'
     return h
 

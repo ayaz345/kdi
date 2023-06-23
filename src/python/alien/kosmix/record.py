@@ -45,8 +45,8 @@ class RecordType(StructType):
                                  (name, tc, __typecode_registry__[tc].__name__))
             self.__typecode_registry__[tc] = self
 
-    def getTypecodeClass(cls, typecode):
-        return cls.__typecode_registry__.get(typecode, None)
+    def getTypecodeClass(self, typecode):
+        return self.__typecode_registry__.get(typecode, None)
     getTypecodeClass = classmethod(getTypecodeClass)
 
 
@@ -81,8 +81,8 @@ class Record(StructBase):
         ],
     }
 
-    def _sizeof(cls, ver=None):
-        baseSize = StructBase._basesizeof(cls, ver)
+    def _sizeof(self, ver=None):
+        baseSize = StructBase._basesizeof(self, ver)
         return lambda obj: baseSize + obj.length
     _sizeof = classmethod(_sizeof)
 

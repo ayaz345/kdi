@@ -50,31 +50,27 @@ class VariableType(object):
 
         # Get return type based on predicate
         if predicateIsTrue:
-            if isinstance(self.trueType, types.FunctionType):
-                rtype = self.trueType(obj)
-            else:
-                rtype = self.trueType
+            rtype = (
+                self.trueType(obj)
+                if isinstance(self.trueType, types.FunctionType)
+                else self.trueType
+            )
+        elif isinstance(self.falseType, types.FunctionType):
+            rtype = self.falseType(obj)
         else:
-            if isinstance(self.falseType, types.FunctionType):
-                rtype = self.falseType(obj)
-            else:
-                rtype = self.falseType
+            rtype = self.falseType
 
-        # Return (type, version) pair
-        if isinstance(rtype, tuple):
-            assert len(rtype) == 2
-            return rtype
-        else:
+        if not isinstance(rtype, tuple):
             return (rtype, None)
+        assert len(rtype) == 2
+        return rtype
 
     def _sizeof(self, ver):
         def getAttrSize(obj, attrObj):
             rtype,rver = self(obj)
             rsize = rtype._sizeof(rver)
-            if callable(rsize):
-                return rsize(attrObj)
-            else:
-                return rsize
+            return rsize(attrObj) if callable(rsize) else rsize
+
         return getAttrSize
 
 

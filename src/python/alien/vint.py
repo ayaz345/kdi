@@ -37,17 +37,17 @@ class VInt(object):
         value |= (b & 0x7f) << shifts
         return value
 
-    def calcsize(n):
-        if n < 0:            return 5
-        elif n < (1 << 7):   return 1
-        elif n < (1 << 14):  return 2
-        elif n < (1 << 21):  return 3
-        elif n < (1 << 28):  return 4
+    def calcsize(self):
+        if self < 0:            return 5
+        elif self < 1 << 7:   return 1
+        elif self < 1 << 14:  return 2
+        elif self < 1 << 21:  return 3
+        elif self < 1 << 28:  return 4
         else:                return 5
     calcsize = staticmethod(calcsize)
 
-    def _sizeof(cls, ver=None):
-        return cls.calcsize
+    def _sizeof(self, ver=None):
+        return self.calcsize
     _sizeof = classmethod(_sizeof)
 
 
@@ -68,20 +68,20 @@ class VLong(object):
         value |= (b & 0x7f) << shifts
         return value
 
-    def calcsize(n):
-        if n < 0:            return 10
-        elif n < (1 << 7):   return 1
-        elif n < (1 << 14):  return 2
-        elif n < (1 << 21):  return 3
-        elif n < (1 << 28):  return 4
-        elif n < (1 << 35):  return 5
-        elif n < (1 << 42):  return 6
-        elif n < (1 << 49):  return 7
-        elif n < (1 << 56):  return 8
-        elif n < (1 << 63):  return 9
+    def calcsize(self):
+        if self < 0:            return 10
+        elif self < 1 << 7:   return 1
+        elif self < 1 << 14:  return 2
+        elif self < 1 << 21:  return 3
+        elif self < 1 << 28:  return 4
+        elif self < 1 << 35:  return 5
+        elif self < 1 << 42:  return 6
+        elif self < 1 << 49:  return 7
+        elif self < 1 << 56:  return 8
+        elif self < 1 << 63:  return 9
         else:                return 10
     calcsize = staticmethod(calcsize)
 
-    def _sizeof(cls, ver=None):
-        return cls.calcsize
+    def _sizeof(self, ver=None):
+        return self.calcsize
     _sizeof = classmethod(_sizeof)

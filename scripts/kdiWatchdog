@@ -46,7 +46,7 @@ def readPidFile(pidFile):
 
 def serverUp(pid):
     try:
-        cmdline = file('/proc/%s/cmdline' % pid).read()
+        cmdline = file(f'/proc/{pid}/cmdline').read()
         #log('serverUp: %r' % cmdline)
         args = cmdline.split('\x00')
         #log('serverUp: %r' % args)
@@ -114,7 +114,7 @@ def killUnresponsive(pidFile, pingCmd):
             continue
 
         # Try running our ping command
-        log('running: %s' % pingCmd)
+        log(f'running: {pingCmd}')
         x = system_async(pingCmd)
 
         # Wait for it to finish or time out
@@ -122,25 +122,22 @@ def killUnresponsive(pidFile, pingCmd):
 
         if ret == 0:
             # Command succeeded
-            log('success: %s' % pingCmd)
+            log(f'success: {pingCmd}')
             lastResponse = time.time()
         elif ret is None:
             # Command timed out, kill
-            log('timeout: %s' % pingCmd)
+            log(f'timeout: {pingCmd}')
             x.cancel()
         else:
             # Command failed
-            log('failure: %s' % pingCmd)
-            pass
-
+            log(f'failure: {pingCmd}')
         # If we haven't managed to get a good response recently, kill
         # the server
         if time.time() - lastResponse > killThreshold:
             # Haven't gotten anything in a while, kill it!
             log('command has not succeeded in %d seconds: %s' %
                 (time.time() - lastResponse, pingCmd))
-            pid = readPidFile(pidFile)
-            if pid:
+            if pid := readPidFile(pidFile):
                 log('killing PID %d' % pid)
                 try:
                     os.kill(pid, 9)
@@ -178,21 +175,20 @@ def keepServerUp(pidFile, startCmd):
             continue
 
         # There's no server with the given PID
-        log('server PID %s is down' % pid)
+        log(f'server PID {pid} is down')
 
         # Make sure the PID file hasn't just changed, possibly due to
         # a new server coming up
         pid2 = readPidFile(pidFile)
         if pid != pid2:
-            log('PID file changed: old=%s, new=%s' % (pid, pid2))
+            log(f'PID file changed: old={pid}, new={pid2}')
             time.sleep(5)
             continue
 
         # Server is down, we should try to restart it
-        log('starting new server: %s' % startCmd)
-        ret = os.system(startCmd)
-        if ret:
-            log('start command failed: %s' % startCmd)
+        log(f'starting new server: {startCmd}')
+        if ret := os.system(startCmd):
+            log(f'start command failed: {startCmd}')
             sys.exit(1)
 
         # Wait for a bit after restart
@@ -239,20 +235,21 @@ def main():
     if not opt.pidfile:
         op.error('need --pidfile')
 
-    table = 'kdi://localhost:%s/%s' % (opt.port, opt.name)
+    table = f'kdi://localhost:{opt.port}/{opt.name}'
     instanceDir = os.path.dirname(opt.pidfile)
 
-    scanCmd = "ulimit -c 0; %s -c '%s' >/dev/null 2>&1 </dev/null" % (opt.kdiScan, table)
+    scanCmd = f"ulimit -c 0; {opt.kdiScan} -c '{table}' >/dev/null 2>&1 </dev/null"
     loadCmd = "ulimit -c 0; echo '(\"a\",\"b\",@0,\"c\")' | %s -t '%s' - >/dev/null 2>&1" % (opt.kdiLoad, table)
-    startCmd = "%s -d %s -p %s start" % (opt.kdi, instanceDir, opt.port)
+    startCmd = f"{opt.kdi} -d {instanceDir} -p {opt.port} start"
 
-    log('scan: %s' % scanCmd)
-    log('load: %s' % loadCmd)
-    log('start: %s' % startCmd)
-    log('pidfile: %s' % opt.pidfile)
+    log(f'scan: {scanCmd}')
+    log(f'load: {loadCmd}')
+    log(f'start: {startCmd}')
+    log(f'pidfile: {opt.pidfile}')
 
-    threads = []
-    threads.append(threading.Thread(target=killUnresponsive, args=(opt.pidfile, scanCmd)))
+    threads = [
+        threading.Thread(target=killUnresponsive, args=(opt.pidfile, scanCmd))
+    ]
     threads.append(threading.Thread(target=killUnresponsive, args=(opt.pidfile, loadCmd)))
 
     for t in threads:

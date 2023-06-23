@@ -43,27 +43,19 @@ _ldd_abs =      re.compile(r'(/[^ ]+) \((0x[0-9A-Fa-f]+)\)')
 
 def iterLdd(fn):
     #print 'ldd "%s"' % fn
-    for l in os.popen('ldd "%s" 2>/dev/null'%fn):
+    for l in os.popen(f'ldd "{fn}" 2>/dev/null'):
         l = l.strip()
-        if l == 'not a dynamic executable':
+        if l in ['not a dynamic executable', 'statically linked']:
             return
-        elif l == 'statically linked':
-            return
-
-        m = _ldd_rel_fail.match(l)
-        if m:
+        if m := _ldd_rel_fail.match(l):
             yield (m.group(1), None, None)
+        elif m := _ldd_rel.match(l):
+            yield m.group(1,2,3)
+        elif m := _ldd_abs.match(l):
+            yield m.group(1,1,2)
         else:
-            m = _ldd_rel.match(l)
-            if m:
-                yield m.group(1,2,3)
-            else:
-                m = _ldd_abs.match(l)
-                if m:
-                    yield m.group(1,1,2)
-                else:
-                    raise RuntimeError('unexpected output from '
-                                       'ldd %r: %r' % (fn, l))
+            raise RuntimeError('unexpected output from '
+                               'ldd %r: %r' % (fn, l))
 
 def getDependentFiles(fn, _cache={}):
     if fn in _cache:

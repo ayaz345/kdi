@@ -85,6 +85,4 @@ def main():
         f.add(sz)
         print '%s total=%s ratio=%.3f' % (f.tbls, f.totalCompaction, f.totalCompaction*1.0/sum(f.tbls))
 
-if __name__ == '__main__':
-    pass
     #main()

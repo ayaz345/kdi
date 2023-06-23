@@ -25,10 +25,7 @@ from alien.array import ArrayBase
 def sizeof(x,ver=None):
     try:
         fsize = x._sizeof(ver)
-        if callable(fsize):
-            return fsize(x)
-        else:
-            return fsize
+        return fsize(x) if callable(fsize) else fsize
     except AttributeError:
         pass
     try:
@@ -96,7 +93,11 @@ def iter_struct_tokens(x):
 
     Other items in the token stream will be string values.
     """
-    if getattr(x, '__nobrowse__', False):
+    if (
+        getattr(x, '__nobrowse__', False)
+        or not hasattr(x, '_iterattrs')
+        and not isinstance(x, ArrayBase)
+    ):
         yield str(x)
     elif hasattr(x, '_iterattrs'):
         yield OPEN_STRUCT
@@ -104,19 +105,15 @@ def iter_struct_tokens(x):
             yield attr
             yield KV_SEP
             value = getattr(x, attr)
-            for tok in iter_struct_tokens(value):
-                yield tok
+            yield from iter_struct_tokens(value)
             yield ELEM_SEP
         yield CLOSE_STRUCT
-    elif isinstance(x, ArrayBase):
+    else:
         yield OPEN_LIST
         for elem in x:
-            for tok in iter_struct_tokens(elem):
-                yield tok
+            yield from iter_struct_tokens(elem)
             yield ELEM_SEP
         yield CLOSE_LIST
-    else:
-        yield str(x)
 
 def closing_token_nearby(push_it, open_tok, close_tok, nChars, allowNesting):
     """closing_token_nearby(push_it, open_tok, close_tok, nChars, allowNesting) --> boolean
@@ -130,10 +127,7 @@ def closing_token_nearby(push_it, open_tok, close_tok, nChars, allowNesting):
     depth = 1
     for tok in push_it:
         buf.append(tok)
-        if tok == ELEM_SEP:
-            tokLen = 1
-        else:
-            tokLen = 1 + len(token_str(tok))
+        tokLen = 1 if tok == ELEM_SEP else 1 + len(token_str(tok))
         if not allowNesting and tok in (OPEN_STRUCT, OPEN_LIST):
             nChars = -1
             break
@@ -305,44 +299,36 @@ def iter_format_struct(x, layout=LAYOUT_NORMAL, maxLen=None):
     yield lineBuf.getvalue()
 
 def format_struct(x, indent=0, brace=False):
-    if hasattr(x, '__nobrowse__'):
+    if (
+        hasattr(x, '__nobrowse__')
+        or not isinstance(x, StructBase)
+        and not isinstance(x, ArrayBase)
+    ):
         return str(x)
     elif isinstance(x, StructBase):
-        z = ['%s = %s' % (a, format_struct(getattr(x,a), indent+2, True)) for a in x._iterattrs()]
+        z = [
+            f'{a} = {format_struct(getattr(x, a), indent + 2, True)}'
+            for a in x._iterattrs()
+        ]
         if brace:
-            if z:
-                z = ['{'] + z + ['}']
-            else:
-                z = ['{}']
+            z = ['{'] + z + ['}'] if z else ['{}']
         return ('\n' + ' '*indent).join(z)
-    elif isinstance(x, ArrayBase):
-        z = ['%s,' % format_struct(e, indent+2, True) for e in x]
-        if brace:
-            if z:
-                z = ['['] + z + [']']
-            else:
-                z = ['[]']
-        return '(len: %d) ' % len(x) + ('\n' + ' '*indent).join(z)
     else:
-        return str(x)
+        z = [f'{format_struct(e, indent + 2, True)},' for e in x]
+        if brace:
+            z = ['['] + z + [']'] if z else ['[]']
+        return '(len: %d) ' % len(x) + ('\n' + ' '*indent).join(z)
 
 def iter_data(s, dtype, dver=None, start=0, nelem=None):
     sz_ = dtype._sizeof(dver)
-    if not callable(sz_):
-        sz = lambda x: sz_
-    else:
-        sz = sz_
-
+    sz = (lambda x: sz_) if not callable(sz_) else sz_
     if nelem is not None:
-        for i in range(nelem):
+        for _ in range(nelem):
             x = dtype(s, start, dver)
             start += sz(x)
             yield x
     else:
-        if hasattr(s, '__len__'):
-            end = s.__len__()
-        else:
-            end = len(s)
+        end = s.__len__() if hasattr(s, '__len__') else len(s)
         while start < end:
             x = dtype(s, start, dver)
             start += sz(x)

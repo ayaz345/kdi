@@ -36,12 +36,11 @@ class PrimType(type):
 class PrimBase(object):
     __metaclass__ = PrimType
 
-    def __new__(klas, buffer, start=0, version=None):
-        return _struct.unpack(klas.__format__,
-                              buffer[start:start+klas.__size__])[0]
+    def __new__(cls, buffer, start=0, version=None):
+        return _struct.unpack(cls.__format__, buffer[start:start + cls.__size__])[0]
 
-    def _sizeof(cls, ver=None):
-        return cls.__size__
+    def _sizeof(self, ver=None):
+        return self.__size__
     _sizeof = classmethod(_sizeof)
 
 

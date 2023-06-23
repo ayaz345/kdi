@@ -26,8 +26,7 @@
 class Config(object):
     def __init__(self, fn, **kwDef):
         self.fn = fn
-        self.sym = {}
-        self.sym.update(kwDef)
+        self.sym = {} | kwDef
         execfile(fn, self.sym)
 
     def __getattr__(self, k):

@@ -25,6 +25,9 @@ import time
 #----------------------------------------------------------------------------
 def Timestamp(dtype, dver=None, scaleToSeconds=1.0):
 
+
+
+
     class Timestamp(object):
         def __init__(self, buf, offset=0, ver=None):
             self._val = dtype(buf, offset, dver)
@@ -35,13 +38,16 @@ def Timestamp(dtype, dver=None, scaleToSeconds=1.0):
         def __repr__(self):
             return repr(self._val)
 
-        def _sizeof(cls, ver=None):
+        def _sizeof(self, ver=None):
             return dtype._sizeof(dver)
+
         _sizeof = classmethod(_sizeof)
 
         def __getRaw(self):
             return self._val
+
         raw = property(__getRaw)
+
 
     return Timestamp
 

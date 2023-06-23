@@ -24,9 +24,7 @@ from util.zero import zeroEncode
 import pykdi
 
 def iterMetaCells(table, nPartitions, splitPoints, servers, format, alphabet):
-    d = {}
-    d['table'] = table
-
+    d = {'table': table}
     pi = 0
     for split in iterSplits(nPartitions, splitPoints, alphabet):
         d['partition'] = pi

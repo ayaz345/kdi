@@ -37,7 +37,7 @@ class StringData(StructBase):
         return rtype(self._buf, self._base + self._offsetof('data'))
     data = property(__get_data)
 
-    def _sizeof(cls, ver=None):
+    def _sizeof(self, ver=None):
         return lambda x: LsbInt._sizeof() + x.len
     _sizeof = classmethod(_sizeof)
 

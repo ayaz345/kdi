@@ -29,6 +29,9 @@ from util.xmlfmt import xml
 # Offset
 #----------------------------------------------------------------------------
 def Offset(ttype, tver=None, otype=LsbInt, over=None):
+
+
+
     class Offset(StructBase):
         NULL_OFFSET = 1
         __format__ = {
@@ -46,13 +49,12 @@ def Offset(ttype, tver=None, otype=LsbInt, over=None):
                 return None
             else:
                 return ttype(self._buf, self._base + self.offset, tver)
+
         target = property(__get_target)
 
         def __xml__(self):
-            if self.isNull():
-                return ''
-            else:
-                return xml(self.target)
+            return '' if self.isNull() else xml(self.target)
+
 
     return Offset
 
@@ -63,7 +65,10 @@ def Offset(ttype, tver=None, otype=LsbInt, over=None):
 def ArrayOffset(ttype, tver=None,
                 otype=LsbInt, over=None,
                 stype=LsbUInt, sver=None):
-    class ArrayOffset(Offset(ttype, tver, otype, over)):
+
+
+
+    class ArrayOffset((Offset(ttype, tver, otype, over))):
         __format__ = {
             0 : [
             ('length', stype, sver),
@@ -84,7 +89,7 @@ def ArrayOffset(ttype, tver=None,
         def _iteritems(self):
             off = self._base + self.offset
             sz = sizeof(ttype, tver)
-            for i in xrange(self.length):
+            for _ in xrange(self.length):
                 yield ttype(self._buf, off, tver)
                 off += sz
 
@@ -94,10 +99,13 @@ def ArrayOffset(ttype, tver=None,
         def __get_target(self):
             atype = FixedArray(self.length, ttype, tver)
             return atype(self._buf, self._base + self.offset)
+
         target = property(__get_target)
 
         def __xml__(self):
-            return ''.join(['<item>%s</item>' % xml(x) for x in self._iteritems()])
-        
+            return ''.join([f'<item>{xml(x)}</item>' for x in self._iteritems()])
+                    
+                
+
 
     return ArrayOffset

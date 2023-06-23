@@ -114,8 +114,7 @@ def expandList(x):
                 mid = x[start+1:m.start()]
                 end = x[m.end():]
                 for rep in expandBits(mid):
-                    for xx in expandList(bgn+rep+end):
-                        yield xx
+                    yield from expandList(bgn+rep+end)
             if count > 0:
                 count -= 1
 
@@ -175,10 +174,7 @@ class Properties(object):
     NO_DEFAULT = object()
     
     def __init__(self, fn=None, vars=None):
-        if vars is not None:
-            self.vars = vars
-        else:
-            self.vars = {}
+        self.vars = vars if vars is not None else {}
         self.props = {}
         self.keys = []
         if fn is not None:
@@ -227,12 +223,9 @@ class Properties(object):
         """
         def repl(m):
             key, dflt = m.group(1,2)
-            if dflt:
-                # strip leading colon
-                dflt = dflt[1:]
-            else:
-                dflt = self.NO_DEFAULT
+            dflt = dflt[1:] if dflt else self.NO_DEFAULT
             return self.getVar(key, dflt)
+
         return _var.sub(repl, val)
 
     def get(self, key, dflt=NO_DEFAULT, expandVars=True):
@@ -258,9 +251,8 @@ class Properties(object):
         val = self.get(key, dflt, expandVars)
         for item in val.split(sep):
             for subitem in expandList(item):
-                if not subitem and omitEmpty:
-                    continue
-                yield subitem
+                if subitem or not omitEmpty:
+                    yield subitem
 
     def getList(self, key, dflt=NO_DEFAULT, sep=None,
                 expandVars=True, omitEmpty=True):

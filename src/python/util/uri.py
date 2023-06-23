@@ -42,18 +42,18 @@ class Uri(object):
     def __str__(self):
         r = ''
         if self.schemeDef:
-            r += self.scheme + ':'
+            r += f'{self.scheme}:'
         if self.authorityDef:
-            r += '//' + self.authority
+            r += f'//{self.authority}'
         r += self.path
         if self.queryDef:
-            r += '?' + self.query
+            r += f'?{self.query}'
         if self.fragmentDef:
-            r += '#' + self.fragment
+            r += f'#{self.fragment}'
         return r
 
     def __repr__(self):
-        return 'Uri(%s)' % self.__str__()
+        return f'Uri({self.__str__()})'
 
     def schemeDefined(self):
         return self.schemeDef

@@ -25,10 +25,7 @@
 def getdoc(x):
     """getdoc(x) --> docstring for x"""
     doc = getattr(x, '__doc__', None)
-    if doc is None:
-        return ''
-    else:
-        return str(doc)
+    return '' if doc is None else str(doc)
 
 #----------------------------------------------------------------------------
 # summary

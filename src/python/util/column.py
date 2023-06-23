@@ -45,11 +45,8 @@ def fitFields(items, fields=None, width=70, label=False):
         attrs.append(attr)
         labels.append(lbl)
 
-    values = []
-    for x in items:
-        values.append([str(x[attr]) for attr in attrs])
-
-    fwidths = [max([len(v[i]) for v in values]) for i in range(nFields)]
+    values = [[str(x[attr]) for attr in attrs] for x in items]
+    fwidths = [max(len(v[i]) for v in values) for i in range(nFields)]
     hdr = None
     if label:
         fwidths = [max(fwidths[i], len(labels[i])) for i in range(nFields)]
@@ -111,7 +108,7 @@ def fitColumns(args, width=70, sep='  ', header=None):
     # Emit header
     if header:
         for line in header:
-            yield sep.join([line for i in range(cols)])
+            yield sep.join([line for _ in range(cols)])
 
     # Emit each row
     for r in range(height):

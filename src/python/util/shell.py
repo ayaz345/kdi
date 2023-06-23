@@ -33,7 +33,7 @@ _log = None
 def formatOpt(flag, arg):
     if arg:
         arg = str(arg).replace('\\','\\\\').replace('"','\\"')
-        return '%s "%s"' % (flag, arg)
+        return f'{flag} "{arg}"'
     elif arg is not None:
         return flag
     else:
@@ -91,15 +91,9 @@ class CommandDispatcher(object):
         self.complete = Queue.Queue()
         self.threads = []
         self.outstanding = 0
-        if dryrun is None:
-            self.dryrun = _dryrun
-        else:
-            self.dryrun = dryrun
-        if log is None:
-            self.log = _log
-        else:
-            self.log = log
-        for i in xrange(maxJobs):
+        self.dryrun = _dryrun if dryrun is None else dryrun
+        self.log = _log if log is None else log
+        for _ in xrange(maxJobs):
             t = threading.Thread(target=self._threadLoop)
             t.setDaemon(True)
             self.threads.append(t)

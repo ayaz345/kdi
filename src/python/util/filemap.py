@@ -109,10 +109,7 @@ class FileMap(object):
     DEFAULT_CACHE_CAPACITY = 500
 
     def __init__(self, f, cache=None):
-        if isinstance(f, str):
-            self.f = file(f)
-        else:
-            self.f = f
+        self.f = file(f) if isinstance(f, str) else f
         if cache is None:
             self.cache = FileMapCache(self.DEFAULT_CACHE_CAPACITY)
         else:
@@ -152,11 +149,8 @@ class FileMap(object):
         if end < 0:
             end = self.size + end
 
-        if begin < 0:
-            begin = 0
-        if end > self.size:
-            end = self.size
-
+        begin = max(begin, 0)
+        end = min(end, self.size)
         result = ''
         while begin < end:
             base = begin & self.CHUNK_MASK

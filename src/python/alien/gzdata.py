@@ -27,43 +27,45 @@ from util.xmlfmt import xml
 #----------------------------------------------------------------------------
 def GZippedData(ztype, zver=None, ltype=MsbInt, lver=None):
     
+
+
+
     class GZippedData(object):
         def __init__(self, buf, base=0, ver=None):
             self._buf = buf
             if callable(ltype):
                 self._gzlen = ltype(buf, base, lver)
                 lsize = ltype._sizeof(lver)
-                if callable(lsize):
-                    self._gzbase = base + lsize(self._gzlen)
-                else:
-                    self._gzbase = base + lsize
+                self._gzbase = base + lsize(self._gzlen) if callable(lsize) else base + lsize
             else:
                 self._gzlen = ltype
                 self._gzbase = base
             self._size = self._gzbase + self._gzlen - base
 
-        def _sizeof(cls, ver=None):
-            if callable(ltype):
-                return lambda obj: obj._size
-            else:
-                return ltype
+        def _sizeof(self, ver=None):
+            return (lambda obj: obj._size) if callable(ltype) else ltype
+
         _sizeof = classmethod(_sizeof)
 
         def __get_raw_zipped(self):
             return self._buf[self._gzbase : self._gzbase + self._gzlen]
+
         rawZipped = property(__get_raw_zipped)
 
         def __get_raw_unzipped(self):
             return gzip.GzipFile('','r',9,cStringIO.StringIO(self.rawZipped)).read()
+
         rawUnzipped = property(__get_raw_unzipped)
 
         def __get_unzipped(self):
             return ztype(self.rawUnzipped, 0, zver)
+
         unzipped = property(__get_unzipped)
 
         def __xml__(self):
             return xml(self.unzipped)
-        
+
+
 
     return GZippedData
 

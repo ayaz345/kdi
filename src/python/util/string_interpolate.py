@@ -43,8 +43,7 @@ def stringToFloat(s, min='\0', max='\xff'):
         elif c > max:
             c = max
         n = n * range + c - min
-    f = n / (range ** len(s))
-    return f
+    return n / (range ** len(s))
 
 #----------------------------------------------------------------------------
 # floatToString
@@ -64,8 +63,7 @@ def floatToString(f, min='\0', max='\xff'):
         i = int(f)
         f -= i
         chars.append(chr(min+i))
-    s = ''.join(chars)
-    return s
+    return ''.join(chars)
 
 #----------------------------------------------------------------------------
 # prefixLen
@@ -100,7 +98,7 @@ def interpolateString(t, s0, s1, min='\0', max='\xff'):
 class Alphabet(object):
     def __init__(self, letters):
         self._chr = list(letters)
-        self._ord = dict((c,i) for i,c in enumerate(self._chr))
+        self._ord = {c: i for i,c in enumerate(self._chr)}
         if len(self._ord) < len(self._chr):
             raise ValueError('alphabet cannot contain duplicate letters')
     
@@ -217,7 +215,7 @@ def string_chr(idx, maxLen, alphabet=_byteAlphabet):
 
     k = 1
     K = [k]
-    for i in xrange(1,maxLen):
+    for _ in xrange(1,maxLen):
         k *= A
         K.append(K[-1] + k)
 

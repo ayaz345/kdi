@@ -27,8 +27,7 @@ def dirIter(basePath, yieldFilter=None, recurseFilter=None):
         if not yieldFilter or yieldFilter(p):
             yield p
         if os.path.isdir(p) and (not recurseFilter or recurseFilter(p)):
-            for x in dirIter(p, yieldFilter, recurseFilter):
-                yield x
+            yield from dirIter(p, yieldFilter, recurseFilter)
 
 def iterFilesWithExtension(path, ext):
     return dirIter(path, lambda x: x.endswith(ext) and os.path.isfile(x))

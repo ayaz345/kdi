@@ -22,6 +22,9 @@
 # RawData
 #----------------------------------------------------------------------------
 def RawData(sz):
+
+
+
     class RawData(object):
         __size__ = sz
 
@@ -30,30 +33,30 @@ def RawData(sz):
             self._off = offset
 
         def __repr__(self):
-            return 'RawData(%s)' % self
+            return f'RawData({self})'
 
         def __get_raw(self):
             if self.__size__ is None:
                 return self._buf[self._off:]
             else:
                 return self._buf[self._off : self._off + self.__size__]
+
         raw = property(__get_raw)
 
         def __len__(self):
-            if self.__size__ is None:
-                return len(self._buf) - self._off
-            else:
-                return self.__size__
+            return len(self._buf) - self._off if self.__size__ is None else self.__size__
 
         def __str__(self):
             return repr(self.raw)
 
-        def _sizeof(cls, ver=None):
-            if cls.__size__ is None:
+        def _sizeof(self, ver=None):
+            if self.__size__ is None:
                 return lambda x: len(x._buf) - x._off
             else:
-                return cls.__size__
+                return self.__size__
+
         _sizeof = classmethod(_sizeof)
+
 
     return RawData
 
@@ -61,6 +64,9 @@ def RawData(sz):
 # HexData
 #----------------------------------------------------------------------------
 def HexData(sz):
+
+
+
     class HexData(object):
         __size__ = sz 
 
@@ -70,6 +76,7 @@ def HexData(sz):
 
         def __get_raw(self):
             return self._buf[self._base : self._base + self.__size__]
+
         raw = property(__get_raw)
 
         def __str__(self):
@@ -78,8 +85,10 @@ def HexData(sz):
         def __repr__(self):
             return repr(self.raw)
 
-        def _sizeof(cls, ver=None):
-            return cls.__size__
+        def _sizeof(self, ver=None):
+            return self.__size__
+
         _sizeof = classmethod(_sizeof)
+
 
     return HexData

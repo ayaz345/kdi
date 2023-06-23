@@ -78,27 +78,45 @@ _timepattern = r'(\d{1,2})(?::(\d{2}))?(?::(\d{2}))?(?:\s*(a|p)[m.]*)?'
 _datepattern = r'(?:(\d{2,4})[-/])?(\d{1,2})[-/](\d{1,2})'
 
 _timefmts = [
-    (re.compile(r'now$',re.I), lambda x: now()),
-    (re.compile(r'today$',re.I), lambda x: today()),
-    (re.compile(r'yesterday$',re.I), lambda x: today() - _timescale['d']),
-    (re.compile(r'tomorrow$',re.I), lambda x: today() + _timescale['d']),
-    (re.compile(r'([-+]\s*\d+(?:\.\d+)?)\s*(s|m|h|d|w|y)\w*$',re.I),
-     lambda x: now() + float(x.group(1)) * _timescale[x.group(2).lower()]),
-    (re.compile(r'(\d+(?:\.\d+)?)\s*(s|m|h|d|w|y)\w* ago$',re.I),
-     lambda x: now() - float(x.group(1)) * _timescale[x.group(2).lower()]),
-    (re.compile(r'last (s|m|h|d|w|y)\w*$',re.I),
-     lambda x: now() - _timescale[x.group(1).lower()]),
-    (re.compile(r'next (s|m|h|d|w|y)\w*$',re.I),
-     lambda x: now() + _timescale[x.group(1).lower()]),
-    (re.compile(_timepattern + '$', re.I),
-     lambda x: today() + interpTime(*x.group(1,2,3,4))),
-    (re.compile(_datepattern + '$', re.I),
-     lambda x: interpDate(*x.group(1,2,3))),
-    (re.compile(_timepattern + r'\s+' + _datepattern + '$', re.I),
-     lambda x: interpDate(*x.group(5,6,7)) + interpTime(*x.group(1,2,3,4))),
-    (re.compile(_datepattern + r'\s+' + _timepattern + '$', re.I),
-     lambda x: interpDate(*x.group(1,2,3)) + interpTime(*x.group(4,5,6,7))),
-    ]    
+    (re.compile(r'now$', re.I), lambda x: now()),
+    (re.compile(r'today$', re.I), lambda x: today()),
+    (re.compile(r'yesterday$', re.I), lambda x: today() - _timescale['d']),
+    (re.compile(r'tomorrow$', re.I), lambda x: today() + _timescale['d']),
+    (
+        re.compile(r'([-+]\s*\d+(?:\.\d+)?)\s*(s|m|h|d|w|y)\w*$', re.I),
+        lambda x: now() + float(x.group(1)) * _timescale[x.group(2).lower()],
+    ),
+    (
+        re.compile(r'(\d+(?:\.\d+)?)\s*(s|m|h|d|w|y)\w* ago$', re.I),
+        lambda x: now() - float(x.group(1)) * _timescale[x.group(2).lower()],
+    ),
+    (
+        re.compile(r'last (s|m|h|d|w|y)\w*$', re.I),
+        lambda x: now() - _timescale[x.group(1).lower()],
+    ),
+    (
+        re.compile(r'next (s|m|h|d|w|y)\w*$', re.I),
+        lambda x: now() + _timescale[x.group(1).lower()],
+    ),
+    (
+        re.compile(f'{_timepattern}$', re.I),
+        lambda x: today() + interpTime(*x.group(1, 2, 3, 4)),
+    ),
+    (
+        re.compile(f'{_datepattern}$', re.I),
+        lambda x: interpDate(*x.group(1, 2, 3)),
+    ),
+    (
+        re.compile(_timepattern + r'\s+' + _datepattern + '$', re.I),
+        lambda x: interpDate(*x.group(5, 6, 7))
+        + interpTime(*x.group(1, 2, 3, 4)),
+    ),
+    (
+        re.compile(_datepattern + r'\s+' + _timepattern + '$', re.I),
+        lambda x: interpDate(*x.group(1, 2, 3))
+        + interpTime(*x.group(4, 5, 6, 7)),
+    ),
+]    
 
 def parseTime(s):
     """parseTime(str) --> timestamp
@@ -124,10 +142,9 @@ def parseTime(s):
        TIME DATE    -- DATE at TIME, with DATE and TIME as above
     """
     for pattern, interp in _timefmts:
-        m = pattern.match(s)
-        if m:
+        if m := pattern.match(s):
             return interp(m)
-    raise ValueError('Unsupported date/time format: '+s)
+    raise ValueError(f'Unsupported date/time format: {s}')
 
 #----------------------------------------------------------------------------
 # main
